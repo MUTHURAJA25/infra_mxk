@@ -1,55 +1,71 @@
-    pipeline {
+pipeline {
     agent any
-
-    environment {
-        AWS_ACCESS_KEY_ID     = credentials('aws-access-key') // Jenkins credential ID
-        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-key')
-        TF_VERSION = '1.9.7'
-    }
-
     stages {
-        stage('Checkout') {
+        stage('Clone Repository') {
             steps {
-                git 'https://github.com/MUTHURAJA25/infra_mxk.git'
-            }
-        }
+                // Clean workspace before cloning (optional)
+                deleteDir()
 
-        stage('Setup Terraform') {
-            steps {
-                sh '''
-                curl -o terraform.zip https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
-                unzip terraform.zip
-                sudo mv terraform /usr/local/bin/
-                terraform version
-                '''
+                // Clone the Git repository
+                git branch: 'master',
+                    url: 'https://github.com/MUTHURAJA25/infra_mxk.git'
+
+                sh "ls -lart"
             }
         }
 
         stage('Terraform Init') {
-            steps {
-                sh 'terraform init'
-            }
+                    steps {
+                       withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-crendentails-vgs']]){
+                            
+                            sh 'echo "=================Terraform Init=================="'
+                            sh 'terraform init'
+                        
+                    }
+                }
         }
-
-        stage('Terraform Plan') {
-            steps {
-                sh 'terraform plan -var="key_name=your-keypair-name"'
-            }
-        }
-
-        stage('Terraform Apply') {
-            steps {
-                sh 'terraform apply -auto-approve -var="key_name=your-keypair-name"'
-            }
-        }
-    }
-
-    post {
-        success {
-            echo "✅ AWS Infrastructure created successfully!"
-        }
-        failure {
-            echo "❌ Terraform apply failed!"
+        stage('Terraform Validate') {
+    steps {
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-crendentails-vgs']]) {
+            
+                sh 'echo "=================Terraform Validate=================="'
+                sh 'terraform validate'
+            
         }
     }
 }
+        stage('Terraform Plan') {
+            steps {                           
+                       withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-crendentails-vgs']]){
+                            
+                                sh 'echo "=================Terraform Plan=================="'
+                                sh 'terraform plan'
+                            
+                        }
+                    }
+                }        
+        stage('Terraform Apply') {
+            steps {               
+                       withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-crendentails-vgs']]){
+                            
+                                sh 'echo "=================Terraform Apply=================="'
+                                sh 'terraform apply -auto-approve'
+                               
+                        }
+                    }
+                }
+       # stage('Terraform Destroy') {
+            steps {               
+                       withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-crendentails-vgs']]){
+                            
+                                sh 'echo "=================Terraform Apply=================="'
+                                sh 'terraform destroy -auto-approve'
+                               
+                        }
+                    }
+                }
+            }
+        }
+		
+
+    
