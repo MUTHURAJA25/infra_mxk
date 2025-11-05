@@ -10,7 +10,7 @@
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/yourusername/aws-infra.git'
+                git 'https://github.com/MUTHURAJA25/infra_mxk.git'
             }
         }
 
