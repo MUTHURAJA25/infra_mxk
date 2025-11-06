@@ -1,3 +1,12 @@
+  backend "s3" {
+    bucket         = "my-terraform-state-bucket"    
+    key            = "infra_mxk/terraform.tfstate"  
+    region         = "us-east-2"                    
+    dynamodb_table = "terraform-locks"             
+    encrypt        = true                         
+  }
+}
+
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
@@ -88,3 +97,5 @@ resource "aws_instance" "web" {
     Name = "${var.project_name}-ec2"
   }
 }
+
+  
