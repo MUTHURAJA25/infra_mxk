@@ -5,4 +5,4 @@ vpc_cidr             = "10.0.0.0/16"
 public_subnet_cidr   = "10.0.1.0/24"
 az1                  = "us-east-2a"
 igw_name             = "jenkins-aws-demo-igw"
-ami_id               = "ami-0dd655843c87b6930" # Ubuntu 22.04 LTS for us-east-2
+ami_id               = "ami-0abcdef1234567890" # Ubuntu 22.04 LTS for us-east-2
