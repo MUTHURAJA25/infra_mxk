@@ -1,18 +1,85 @@
-# Use your existing VPC by ID
-data "aws_vpc" "selected" {
-  id = "vpc-08730bb4148850adc"
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
 }
 
-# Get subnets in the VPC
-data "aws_subnet_ids" "selected" {
-  vpc_id = data.aws_vpc.selected.id
+provider "aws" {
+  region = var.aws_region
 }
 
-# Security Group
+#############################
+# VPC
+#############################
+resource "aws_vpc" "main" {
+  cidr_block           = var.vpc_cidr
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = {
+    Name = "${var.project_name}-vpc"
+  }
+}
+
+#############################
+# INTERNET GATEWAY
+#############################
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "${var.project_name}-igw"
+  }
+}
+
+#############################
+# PUBLIC SUBNET
+#############################
+resource "aws_subnet" "public" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = var.public_subnet_cidr
+  map_public_ip_on_launch = true
+  availability_zone       = var.az1
+
+  tags = {
+    Name = "${var.project_name}-public-subnet"
+  }
+}
+
+#############################
+# ROUTE TABLE
+#############################
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+
+  tags = {
+    Name = "${var.project_name}-public-rt"
+  }
+}
+
+#############################
+# ROUTE TABLE ASSOCIATION
+#############################
+resource "aws_route_table_association" "public_assoc" {
+  subnet_id      = aws_subnet.public.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
+#############################
+# SECURITY GROUP
+#############################
 resource "aws_security_group" "ec2_sg" {
-  name        = "jenkins-ec2-sg"
+  name        = "${var.project_name}-sg"
   description = "Allow SSH and HTTP"
-  vpc_id      = data.aws_vpc.selected.id
+  vpc_id      = aws_vpc.main.id
 
   ingress {
     from_port   = 22
@@ -34,17 +101,25 @@ resource "aws_security_group" "ec2_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = {
+    Name = "${var.project_name}-sg"
+  }
 }
 
-# EC2 Instance
+#############################
+# EC2 INSTANCE
+#############################
 resource "aws_instance" "web" {
-  ami                    = "ami‑04568bde0d686e039" Ubuntu for ap-south-1
-  instance_type          = "t2.micro"
-  key_name               = var.key_name
-  subnet_id              = data.aws_subnet_ids.selected.ids[0]
+  ami           = var.ami_id
+  instance_type = var.instance_type
+  key_name      = var.key_name
+
+  subnet_id              = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
 
   tags = {
-    Name = "jenkins-aws-demo-ec2"
+    Name = "${var.project_name}-ec2"
   }
 }
+
