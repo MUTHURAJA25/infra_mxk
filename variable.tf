@@ -25,7 +25,7 @@ variable "key_name" {
 
 variable "ami_id" {
   description = "Ubuntu AMI for ap-south-1"
-  default     = "ami-04568bde0d686e039"
+  default     = "ami-0f755b092f315352a"
 }
 
 variable "az1" {
