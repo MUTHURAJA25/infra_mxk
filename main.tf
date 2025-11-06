@@ -14,10 +14,10 @@ resource "aws_vpc" "main" {
 #############################
 # INTERNET GATEWAY
 #############################
-data "aws_internet_gateway" "existing" {
-  filter {
-    name   = "tag:Name"
-    values = ["jenkins-aws-demo-igw"]
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.main.id
+  tags = {
+    Name = "my-igw"
   }
 }
 
