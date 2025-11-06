@@ -1,5 +1,5 @@
   backend "s3" {
-    bucket         = "my-terraform-state-bucket"    
+    bucket         = "my-terraform-state-bucket-25"    
     key            = "infra_mxk/terraform.tfstate"  
     region         = "us-east-2"                    
     dynamodb_table = "terraform-locks"             
