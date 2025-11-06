@@ -1,13 +1,7 @@
-#############################
-# PROVIDER
-#############################
 provider "aws" {
   region = var.aws_region
 }
 
-#############################
-# VPC
-#############################
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
@@ -18,19 +12,13 @@ resource "aws_vpc" "main" {
   }
 }
 
-#############################
-# EXISTING INTERNET GATEWAY
-#############################
 data "aws_internet_gateway" "existing" {
   filter {
     name   = "tag:Name"
-    values = ["jenkins-aws-demo-igw"]
+    values = [var.igw_name]
   }
 }
 
-#############################
-# PUBLIC SUBNET
-#############################
 resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = var.public_subnet_cidr
@@ -42,9 +30,6 @@ resource "aws_subnet" "public" {
   }
 }
 
-#############################
-# ROUTE TABLE
-#############################
 resource "aws_route_table" "public_rt" {
   vpc_id = aws_vpc.main.id
 
@@ -58,17 +43,11 @@ resource "aws_route_table" "public_rt" {
   }
 }
 
-#############################
-# ROUTE TABLE ASSOCIATION
-#############################
 resource "aws_route_table_association" "public_assoc" {
   subnet_id      = aws_subnet.public.id
   route_table_id = aws_route_table.public_rt.id
 }
 
-#############################
-# SECURITY GROUP
-#############################
 resource "aws_security_group" "ec2_sg" {
   name        = "${var.project_name}-sg"
   description = "Allow SSH and HTTP"
@@ -100,9 +79,6 @@ resource "aws_security_group" "ec2_sg" {
   }
 }
 
-#############################
-# EC2 INSTANCE
-#############################
 resource "aws_instance" "web" {
   ami           = var.ami_id
   instance_type = var.instance_type
