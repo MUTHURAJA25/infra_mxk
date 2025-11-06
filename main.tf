@@ -14,16 +14,21 @@ resource "aws_vpc" "main" {
 #############################
 # INTERNET GATEWAY
 #############################
-resource "aws_internet_gateway" "igw" {
-  vpc_id = aws_vpc.main.id
-  tags = {
-    Name = "my-igw"
+# Use an existing IGW instead of creating a new one
+data "aws_internet_gateway" "existing" {
+  filter {
+    name   = "tag:Name"
+    values = ["jenkins-aws-demo-igw"]
   }
 }
 
-resource "aws_vpc_attachment" "attach" {
-  vpc_id             = aws_vpc.main.id
-  internet_gateway_id = data.aws_internet_gateway.existing.id
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = data.aws_internet_gateway.existing.id
+  }
 }
 
 
