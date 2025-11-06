@@ -1,4 +1,4 @@
-key_name = "k8s_multi"
+key_name = "mxk_123"
 
 project_name = "jenkins-aws-demo"
 
