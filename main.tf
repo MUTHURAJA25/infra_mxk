@@ -1,4 +1,11 @@
 #############################
+# PROVIDER
+#############################
+provider "aws" {
+  region = var.aws_region
+}
+
+#############################
 # VPC
 #############################
 resource "aws_vpc" "main" {
@@ -12,25 +19,14 @@ resource "aws_vpc" "main" {
 }
 
 #############################
-# INTERNET GATEWAY
+# EXISTING INTERNET GATEWAY
 #############################
-# Use an existing IGW instead of creating a new one
 data "aws_internet_gateway" "existing" {
   filter {
     name   = "tag:Name"
     values = ["jenkins-aws-demo-igw"]
   }
 }
-
-resource "aws_route_table" "public_rt" {
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = data.aws_internet_gateway.existing.id
-  }
-}
-
 
 #############################
 # PUBLIC SUBNET
@@ -54,7 +50,7 @@ resource "aws_route_table" "public_rt" {
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.igw.id
+    gateway_id = data.aws_internet_gateway.existing.id
   }
 
   tags = {
@@ -119,4 +115,3 @@ resource "aws_instance" "web" {
     Name = "${var.project_name}-ec2"
   }
 }
-
