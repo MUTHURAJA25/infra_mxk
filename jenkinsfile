@@ -1,71 +1,46 @@
 pipeline {
     agent any
+
+    environment {
+        AWS_ACCESS_KEY_ID     = credentials('aws-crendentails-vgs')
+        AWS_SECRET_ACCESS_KEY = credentials('aws-crendentails-vgs')
+        TF_VERSION            = '1.9.7'
+    }
+
     stages {
-        stage('Clone Repository') {
+
+        stage('Clone Repo') {
             steps {
-                // Clean workspace before cloning (optional)
                 deleteDir()
-
-                // Clone the Git repository
-                git branch: 'master',
+                git branch: 'main',
                     url: 'https://github.com/MUTHURAJA25/infra_mxk.git'
-
                 sh "ls -lart"
             }
         }
 
         stage('Terraform Init') {
-                    steps {
-                       withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-crendentails-vgs']]){
-                            
-                            sh 'echo "=================Terraform Init=================="'
-                            sh 'terraform init'
-                        
-                    }
-                }
+            steps {
+                sh 'terraform init'
+            }
         }
+
         stage('Terraform Validate') {
-    steps {
-        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-crendentails-vgs']]) {
-            
-                sh 'echo "=================Terraform Validate=================="'
+            steps {
                 sh 'terraform validate'
-            
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                sh 'terraform plan -out=tfplan'
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                sh 'terraform apply -auto-approve tfplan'
+            }
         }
     }
 }
-        stage('Terraform Plan') {
-            steps {                           
-                       withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-crendentails-vgs']]){
-                            
-                                sh 'echo "=================Terraform Plan=================="'
-                                sh 'terraform plan'
-                            
-                        }
-                    }
-                }        
-        stage('Terraform Apply') {
-            steps {               
-                       withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-crendentails-vgs']]){
-                            
-                                sh 'echo "=================Terraform Apply=================="'
-                                sh 'terraform apply -auto-approve'
-                               
-                        }
-                    }
-                }
-       # stage('Terraform Destroy') {
-            steps {               
-                       withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-crendentails-vgs']]){
-                            
-                                sh 'echo "=================Terraform Apply=================="'
-                                sh 'terraform destroy -auto-approve'
-                               
-                        }
-                    }
-                }
-            }
-        }
-		
 
-    
