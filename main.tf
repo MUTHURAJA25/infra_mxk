@@ -14,13 +14,18 @@ resource "aws_vpc" "main" {
 #############################
 # INTERNET GATEWAY
 #############################
-resource "aws_internet_gateway" "igw" {
-  vpc_id = aws_vpc.main.id
-
-  tags = {
-    Name = "${var.project_name}-igw"
+data "aws_internet_gateway" "existing" {
+  filter {
+    name   = "tag:Name"
+    values = ["jenkins-aws-demo-igw"]
   }
 }
+
+resource "aws_vpc_attachment" "attach" {
+  vpc_id             = aws_vpc.main.id
+  internet_gateway_id = data.aws_internet_gateway.existing.id
+}
+
 
 #############################
 # PUBLIC SUBNET
