@@ -2,9 +2,7 @@ pipeline {
     agent any
 
     environment {
-        AWS_ACCESS_KEY_ID     = credentials('aws-crendentails-vgs')
-        AWS_SECRET_ACCESS_KEY = credentials('aws-crendentails-vgs')
-        TF_VERSION            = '1.9.7'
+        AWS_REGION = "us-east-2"
     }
 
     stages {
@@ -20,27 +18,57 @@ pipeline {
 
         stage('Terraform Init') {
             steps {
-                sh 'terraform init'
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-crendentails-vgs'
+                ]]) {
+                    sh 'terraform init'
+                }
             }
         }
 
         stage('Terraform Validate') {
             steps {
-                sh 'terraform validate'
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-crendentails-vgs'
+                ]]) {
+                    sh 'terraform validate'
+                }
             }
         }
 
         stage('Terraform Plan') {
             steps {
-                sh 'terraform plan -out=tfplan'
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-crendentails-vgs'
+                ]]) {
+                    sh 'terraform plan -out=tfplan'
+                }
             }
         }
 
         stage('Terraform Apply') {
             steps {
-                sh 'terraform apply -auto-approve tfplan'
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-crendentails-vgs'
+                ]]) {
+                    sh 'terraform apply -auto-approve tfplan'
+                }
+            }
+        }
+
+        stage('Terraform Destroy') {
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-crendentails-vgs'
+                ]]) {
+                    sh 'terraform destroy -auto-approve'
+                }
             }
         }
     }
 }
-
